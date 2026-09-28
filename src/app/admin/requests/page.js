@@ -142,7 +142,9 @@ export default function RequestsPage() {
                 <th>Date</th>
                 <th>Customer</th>
                 <th>Bike Model</th>
+                <th>Chassis No.</th>
                 <th>Part Description</th>
+                <th>Photo</th>
                 <th>Status</th>
                 <th>Admin Notes</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
@@ -151,13 +153,13 @@ export default function RequestsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
                     <div className="spinner"></div>
                   </td>
                 </tr>
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
                     No customer part requests in this status.
                   </td>
                 </tr>
@@ -179,10 +181,30 @@ export default function RequestsPage() {
                       <td>
                         <span className="badge badge-neutral">{req.bike_model_text || 'Unspecified'}</span>
                       </td>
+                      <td>
+                        {req.chassis_number ? (
+                          <span style={{ fontFamily: 'monospace', fontSize: 'var(--text-xs)', letterSpacing: '0.03em' }}>{req.chassis_number}</span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>—</span>
+                        )}
+                      </td>
                       <td style={{ maxWidth: '280px' }}>
                         <div style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}>
                           {req.part_description}
                         </div>
+                      </td>
+                      <td>
+                        {req.photo_url ? (
+                          <a href={req.photo_url} target="_blank" rel="noopener noreferrer" title="View full photo">
+                            <img
+                              src={req.photo_url}
+                              alt="Part photo"
+                              style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}
+                            />
+                          </a>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>No photo</span>
+                        )}
                       </td>
                       <td>
                         <select

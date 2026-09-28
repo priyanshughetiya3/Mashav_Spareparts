@@ -55,3 +55,77 @@
   color: var(--text-muted);
   margin-bottom: var(--space-6);
 }
+
+/* Photo Upload */
+.uploadArea {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.uploadArea:hover {
+  border-color: var(--color-primary, #D96B82);
+  background: rgba(217, 107, 130, 0.04);
+}
+
+.uploadPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.uploadIcon {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.uploadText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.uploadHint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.previewContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.previewImg {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+}
+
+.removePhotoBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.removePhotoBtn:hover {
+  background: rgba(239, 68, 68, 0.9);
+}
+
