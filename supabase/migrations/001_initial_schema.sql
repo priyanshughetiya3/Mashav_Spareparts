@@ -172,6 +172,7 @@ $$ LANGUAGE sql SECURITY DEFINER;
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Admins can view all profiles" ON profiles FOR SELECT USING (is_admin());
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Allow insert for own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Categories: public read, admin write
 CREATE POLICY "Anyone can view categories" ON categories FOR SELECT USING (true);
@@ -212,17 +213,21 @@ CREATE POLICY "Admins can update enquiries" ON contact_enquiries FOR UPDATE USIN
 -- Auto-create profile on signup trigger
 -- ============================================================
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO profiles (id, full_name, role)
+  INSERT INTO public.profiles (id, full_name, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'role', 'viewer')
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

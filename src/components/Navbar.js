@@ -71,14 +71,6 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className={styles.actions}>
-          <button
-            onClick={toggleTheme}
-            className={styles.themeToggle}
-            aria-label="Toggle theme"
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
 
           {isCustomer && (
             <Link href="/profile" className={`btn btn-secondary btn-sm ${styles.loginBtn}`}>
@@ -88,6 +80,9 @@ export default function Navbar() {
 
           {isGuest && (
             <>
+              <Link href="/login" className={`btn btn-ghost btn-sm ${styles.loginBtn}`}>
+                Sign In
+              </Link>
               <Link href="/signup" className={`btn btn-primary btn-sm ${styles.loginBtn}`}>
                 Sign Up
               </Link>
@@ -149,6 +144,15 @@ export default function Navbar() {
             )}
             {isGuest && (
               <>
+                <li>
+                  <Link
+                    href="/login"
+                    className={styles.mobileLink}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    🔑 Sign In
+                  </Link>
+                </li>
                 <li>
                   <Link
                     href="/signup"

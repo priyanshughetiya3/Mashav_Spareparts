@@ -70,6 +70,7 @@ function SignupContent() {
         router.push(url);
       }, 2000);
     } catch (err) {
+      console.error('Signup error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
@@ -202,7 +203,7 @@ function SignupContent() {
         <div className={styles.footer}>
           <p>
             Already have an account?{' '}
-            <Link href={`/admin/login?redirect=${encodeURIComponent(redirect)}`} className={styles.link}>
+            <Link href={`/login?redirect=${encodeURIComponent(redirect)}`} className={styles.link}>
               Sign In
             </Link>
           </p>

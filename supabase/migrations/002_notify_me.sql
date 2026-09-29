@@ -53,15 +53,20 @@ CREATE POLICY "Users can unsubscribe"
 
 -- Update the handle_new_user trigger to include phone
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO profiles (id, full_name, role, phone)
+  INSERT INTO public.profiles (id, full_name, role, phone)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'role', 'viewer'),
     COALESCE(NEW.raw_user_meta_data->>'phone', '')
-  );
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    phone = COALESCE(EXCLUDED.phone, public.profiles.phone);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;

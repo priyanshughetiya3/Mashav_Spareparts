@@ -73,12 +73,27 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp(email, password, metadata = {}) {
-    const { data, error } = await supabase.auth.signUp({
+    // Use server-side API route (admin API) — auto-confirms email, no rate limit
+    const res = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        full_name: metadata.full_name || '',
+        phone: metadata.phone || '',
+      }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.error || 'Failed to create account');
+    }
+
+    // Auto sign-in after account creation
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: {
-        data: metadata, // { full_name, phone }
-      },
     });
 
     if (error) throw error;
@@ -89,6 +104,16 @@ export function AuthProvider({ children }) {
     if (user) {
       await fetchProfile(user.id);
     }
+  }
+
+  async function signInWithGoogle(redirectTo = '/parts') {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}${redirectTo}`,
+      },
+    });
+    if (error) throw error;
   }
 
   async function signOut() {
@@ -105,6 +130,7 @@ export function AuthProvider({ children }) {
     loading,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
     refreshProfile,
   };
