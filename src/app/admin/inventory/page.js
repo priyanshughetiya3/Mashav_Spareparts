@@ -404,7 +404,7 @@ export default function InventoryPage() {
 
   // CSV Export
   function handleExportCSV() {
-    const columns = ['part_number', 'name', 'mrp', 'cost_price', 'stock_quantity', 'low_stock_threshold'];
+    const columns = ['part_number', 'barcode', 'name', 'mrp', 'cost_price', 'stock_quantity', 'low_stock_threshold'];
     const csvContent = toCSV(parts, columns);
     downloadFile(csvContent, `sparehub-inventory-${new Date().toISOString().slice(0, 10)}.csv`);
     showToast('Inventory exported to CSV', 'success');
@@ -428,6 +428,7 @@ export default function InventoryPage() {
 
         const formatted = rows.map((r) => ({
           part_number: r.part_number?.trim(),
+          barcode: r.barcode?.trim() || null,
           name: r.name?.trim(),
           mrp: Number(r.mrp) || 0,
           cost_price: Number(r.cost_price) || 0,
@@ -450,9 +451,13 @@ export default function InventoryPage() {
 
   // Filter parts
   const filteredParts = parts.filter((part) => {
+    const searchTerm = search.toLowerCase().trim();
+
     const matchesSearch =
-      part.name.toLowerCase().includes(search.toLowerCase()) ||
-      part.part_number.toLowerCase().includes(search.toLowerCase());
+      !searchTerm ||
+      (part.name || '').toLowerCase().includes(searchTerm) ||
+      (part.part_number || '').toLowerCase().includes(searchTerm) ||
+      (part.barcode || '').toLowerCase().includes(searchTerm);
 
     const matchesCategory = categoryFilter ? String(part.category_id) === String(categoryFilter) : true;
 
