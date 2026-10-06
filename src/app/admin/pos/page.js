@@ -12,7 +12,9 @@ export default function POSPage() {
   const [cart, setCart] = useState([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [loading, setLoading] = useState(false);
+  const [lastBill, setLastBill] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
 
   const inputRef = useRef(null);
@@ -200,81 +202,70 @@ export default function POSPage() {
       return;
     }
 
+    const now = new Date();
+
+    const billNumber =
+      `MS-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
+
+    const billItems = cart.map((item) => ({
+      name: item.name,
+      part_number: item.part_number,
+      quantity: Number(item.quantity),
+      selling_price: Number(item.selling_price),
+      total:
+        Number(item.selling_price) * Number(item.quantity),
+    }));
+
     setLoading(true);
 
     try {
-      // Re-check stock before selling
       for (const item of cart) {
-        const { data: freshPart, error } = await supabase
-          .from('parts')
-          .select('id, name, stock_quantity, cost_price')
-          .eq('id', item.id)
-          .single();
+        const { error } = await supabase.rpc('complete_sale', {
+          p_part_id: item.id,
+          p_quantity: Number(item.quantity),
+          p_selling_price: Number(item.selling_price),
+          p_customer_name: customerName || null,
+          p_customer_phone: customerPhone || null,
+          p_bill_number: billNumber,
+          p_payment_method: paymentMethod,
+        });
 
-        if (error) throw error;
-
-        if (Number(freshPart.stock_quantity) < item.quantity) {
+        if (error) {
           throw new Error(
-            `${freshPart.name}: only ${freshPart.stock_quantity} available`
+            `${item.name}: ${error.message}`
           );
         }
       }
 
-      // Record every cart item
-      for (const item of cart) {
-        const sellPrice = Number(item.selling_price);
-        const costPrice = Number(item.cost_price);
-        const quantity = Number(item.quantity);
-
-        const profit =
-          (sellPrice - costPrice) * quantity;
-
-        // Insert sale
-        const { error: saleError } = await supabase
-          .from('sales')
-          .insert([
-            {
-              part_id: item.id,
-              quantity,
-              selling_price: sellPrice,
-              cost_price_snapshot: costPrice,
-              profit,
-              customer_name: customerName || null,
-              customer_phone: customerPhone || null,
-            },
-          ]);
-
-        if (saleError) throw saleError;
-
-        // Decrease stock
-        const newStock =
-          Number(item.stock_quantity) - quantity;
-
-        const { error: stockError } = await supabase
-          .from('parts')
-          .update({
-            stock_quantity: newStock,
-          })
-          .eq('id', item.id);
-
-        if (stockError) throw stockError;
-      }
+      setLastBill({
+        billNumber,
+        date: new Date(),
+        customerName: customerName || 'Walk-in Customer',
+        customerPhone: customerPhone || '',
+        paymentMethod,
+        items: billItems,
+        total: grandTotal,
+      });
 
       showToast(
-        `Sale completed! Total ${formatCurrency(grandTotal)}`,
+        `Sale completed! Bill ${billNumber}`,
         'success'
       );
 
       clearCart();
     } catch (err) {
       console.error(err);
+
       showToast(
         err.message || 'Failed to complete sale',
         'error'
       );
     } finally {
       setLoading(false);
-      setTimeout(() => inputRef.current?.focus(), 100);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }
 
@@ -616,6 +607,36 @@ export default function POSPage() {
             />
           </div>
 
+          <div style={{ marginBottom: '24px' }}>
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '7px',
+                fontSize: '13px',
+              }}
+            >
+              Payment Method
+            </label>
+
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                fontSize: '15px',
+              }}
+            >
+              <option value="Cash">💵 Cash</option>
+              <option value="UPI">📱 UPI</option>
+              <option value="Card">💳 Card</option>
+            </select>
+          </div>
+
           <div
             style={{
               borderTop:
@@ -632,6 +653,17 @@ export default function POSPage() {
             >
               <span>Items</span>
               <strong>{totalItems}</strong>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '10px',
+              }}
+            >
+              <span>Payment</span>
+              <strong>{paymentMethod}</strong>
             </div>
 
             <div
@@ -734,6 +766,165 @@ export default function POSPage() {
             >
               Point your camera at the product barcode.
             </p>
+          </div>
+        </div>
+      )}
+
+      {lastBill && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            id="print-receipt"
+            style={{
+              background: '#fff',
+              color: '#111',
+              width: '100%',
+              maxWidth: '420px',
+              borderRadius: '12px',
+              padding: '28px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ margin: 0 }}>
+                MASHAV SPARE PARTS
+              </h2>
+
+              <p style={{ margin: '5px 0 15px' }}>
+                Bike Spare Parts
+              </p>
+
+              <hr />
+            </div>
+
+            <div
+              style={{
+                fontSize: '13px',
+                margin: '15px 0',
+              }}
+            >
+              <div>
+                <strong>Bill:</strong> {lastBill.billNumber}
+              </div>
+
+              <div>
+                <strong>Date:</strong>{' '}
+                {lastBill.date.toLocaleString('en-IN')}
+              </div>
+
+              <div>
+                <strong>Customer:</strong>{' '}
+                {lastBill.customerName}
+              </div>
+
+              {lastBill.customerPhone && (
+                <div>
+                  <strong>Phone:</strong>{' '}
+                  {lastBill.customerPhone}
+                </div>
+              )}
+
+              <div>
+                <strong>Payment:</strong>{' '}
+                {lastBill.paymentMethod}
+              </div>
+            </div>
+
+            <hr />
+
+            {lastBill.items.map((item, index) => (
+              <div
+                key={`${item.part_number}-${index}`}
+                style={{
+                  padding: '10px 0',
+                  borderBottom: '1px dashed #ccc',
+                }}
+              >
+                <div style={{ fontWeight: 600 }}>
+                  {item.name}
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '13px',
+                    marginTop: '4px',
+                  }}
+                >
+                  <span>
+                    {item.quantity} ×{' '}
+                    {formatCurrency(item.selling_price)}
+                  </span>
+
+                  <strong>
+                    {formatCurrency(item.total)}
+                  </strong>
+                </div>
+              </div>
+            ))}
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '20px',
+                fontWeight: 700,
+                marginTop: '18px',
+              }}
+            >
+              <span>TOTAL</span>
+
+              <span>
+                {formatCurrency(lastBill.total)}
+              </span>
+            </div>
+
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: '25px',
+                fontSize: '13px',
+              }}
+            >
+              <p>Thank you for your purchase! 🙏</p>
+              <p>Please visit us again.</p>
+            </div>
+
+            <div
+              className="receipt-actions"
+              style={{
+                display: 'flex',
+                gap: '10px',
+                marginTop: '20px',
+              }}
+            >
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={() => window.print()}
+              >
+                🖨️ Print Bill
+              </button>
+
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => setLastBill(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

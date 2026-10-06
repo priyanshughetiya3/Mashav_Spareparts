@@ -1,4 +1,84 @@
+'use client';
 
+import { useState } from 'react';
+import { SHOP_CONFIG } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/Toast';
+import styles from './contact.module.css';
+
+export default function ContactPage() {
+  const toast = useToast();
+  const [form, setForm] = useState({ name: '', phone: '', message: '' });
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.phone.trim() || !form.message.trim()) {
+      toast.warning('Please fill all fields');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('contact_enquiries').insert({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        message: form.message.trim(),
+      });
+      if (error) throw error;
+      toast.success('Enquiry sent! We\'ll get back to you soon.');
+      setForm({ name: '', phone: '', message: '' });
+    } catch (err) {
+      toast.error('Failed to send enquiry. Please try calling us.');
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className={styles.page}>
+      <div className="container">
+        <h1 className={styles.title}>Get in Touch</h1>
+        <p className={styles.subtitle}>We&apos;d love to hear from you</p>
+
+        <div className={styles.grid}>
+          {/* Contact Info */}
+          <div className={styles.infoSection}>
+            <div className={styles.infoCard}>
+              <span className={styles.infoIcon}>📞</span>
+              <div>
+                <h3>Phone</h3>
+                {SHOP_CONFIG.contacts.map((contact, i) => (
+                  <div key={i} style={{ marginBottom: i < SHOP_CONFIG.contacts.length - 1 ? '0.5rem' : 0 }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{contact.name}</span><br />
+                    <a href={`tel:${contact.phone}`} className={styles.infoLink}>
+                      {contact.phone.replace(/^\+91(\d{5})(\d{5})$/, '+91 $1 $2')}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.infoCard}>
+              <span className={styles.infoIcon}>💬</span>
+              <div>
+                <h3>WhatsApp</h3>
+                {SHOP_CONFIG.contacts.map((contact, i) => (
+                  <div key={i} style={{ marginBottom: i < SHOP_CONFIG.contacts.length - 1 ? '0.5rem' : 0 }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{contact.name}</span><br />
+                    <a
+                      href={`https://wa.me/${contact.whatsapp}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.infoLink}
+                    >
+                      Chat on WhatsApp
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className={styles.infoCard}>
               <span className={styles.infoIcon}>📍</span>
