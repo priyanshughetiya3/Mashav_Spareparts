@@ -49,9 +49,14 @@ export default function ContactPage() {
               <span className={styles.infoIcon}>📞</span>
               <div>
                 <h3>Phone</h3>
-                <a href={`tel:${SHOP_CONFIG.phone}`} className={styles.infoLink}>
-                  {SHOP_CONFIG.phone.replace('+91', '+91 ')}
-                </a>
+                {SHOP_CONFIG.contacts.map((contact, i) => (
+                  <div key={i} style={{ marginBottom: i < SHOP_CONFIG.contacts.length - 1 ? '0.5rem' : 0 }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{contact.name}</span><br />
+                    <a href={`tel:${contact.phone}`} className={styles.infoLink}>
+                      {contact.phone.replace(/^\+91(\d{5})(\d{5})$/, '+91 $1 $2')}
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -59,14 +64,19 @@ export default function ContactPage() {
               <span className={styles.infoIcon}>💬</span>
               <div>
                 <h3>WhatsApp</h3>
-                <a
-                  href={`https://wa.me/${SHOP_CONFIG.whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.infoLink}
-                >
-                  Chat with us
-                </a>
+                {SHOP_CONFIG.contacts.map((contact, i) => (
+                  <div key={i} style={{ marginBottom: i < SHOP_CONFIG.contacts.length - 1 ? '0.5rem' : 0 }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{contact.name}</span><br />
+                    <a
+                      href={`https://wa.me/${contact.whatsapp}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.infoLink}
+                    >
+                      Chat on WhatsApp
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -86,27 +96,30 @@ export default function ContactPage() {
               <div>
                 <h3>Working Hours</h3>
                 <p className={styles.infoText}>
-                  Mon – Fri: {SHOP_CONFIG.workingHours.weekdays}<br />
-                  Saturday: {SHOP_CONFIG.workingHours.saturday}<br />
+                  Mon – Sat: {SHOP_CONFIG.workingHours.weekdays}<br />
                   Sunday: {SHOP_CONFIG.workingHours.sunday}
                 </p>
               </div>
             </div>
 
             {/* Quick Action Buttons */}
-            <div className={styles.quickActions}>
-              <a href={`tel:${SHOP_CONFIG.phone}`} className="btn btn-primary btn-lg" style={{ flex: 1 }}>
-                📞 Call Now
-              </a>
-              <a
-                href={`https://wa.me/${SHOP_CONFIG.whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-whatsapp btn-lg"
-                style={{ flex: 1 }}
-              >
-                💬 WhatsApp
-              </a>
+            <div className={styles.quickActions} style={{ flexDirection: 'column', gap: '0.75rem' }}>
+              {SHOP_CONFIG.contacts.map((contact, i) => (
+                <div key={i} style={{ display: 'flex', gap: '0.75rem' }}>
+                  <a href={`tel:${contact.phone}`} className="btn btn-primary btn-lg" style={{ flex: 1 }}>
+                    📞 Call {contact.name.split(' ')[0]}
+                  </a>
+                  <a
+                    href={`https://wa.me/${contact.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-whatsapp btn-lg"
+                    style={{ flex: 1 }}
+                  >
+                    💬 WhatsApp {contact.name.split(' ')[0]}
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
 

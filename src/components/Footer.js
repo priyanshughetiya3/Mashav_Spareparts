@@ -33,17 +33,22 @@ export default function Footer() {
           {/* Contact */}
           <div className={styles.column}>
             <h4 className={styles.columnTitle}>Contact</h4>
-            <a href={`tel:${SHOP_CONFIG.phone}`} className={styles.link}>
-              📞 {SHOP_CONFIG.phone.replace('+91', '+91 ')}
-            </a>
-            <a
-              href={`https://wa.me/${SHOP_CONFIG.whatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.link}
-            >
-              💬 WhatsApp
-            </a>
+            {SHOP_CONFIG.contacts.map((contact, i) => (
+              <div key={i}>
+                <span className={styles.link} style={{ fontSize: '0.8rem', opacity: 0.7 }}>{contact.name}</span>
+                <a href={`tel:${contact.phone}`} className={styles.link}>
+                  📞 {contact.phone.replace(/^\+91(\d{5})(\d{5})$/, '+91 $1 $2')}
+                </a>
+                <a
+                  href={`https://wa.me/${contact.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.link}
+                >
+                  💬 WhatsApp
+                </a>
+              </div>
+            ))}
             <span className={styles.link}>📍 {SHOP_CONFIG.address}</span>
           </div>
         </div>
@@ -51,7 +56,7 @@ export default function Footer() {
         <div className={styles.bottom}>
           <p>© {new Date().getFullYear()} {SHOP_CONFIG.name}. All rights reserved.</p>
           <p className={styles.hours}>
-            Mon-Fri: {SHOP_CONFIG.workingHours.weekdays} | Sat: {SHOP_CONFIG.workingHours.saturday} | Sun: {SHOP_CONFIG.workingHours.sunday}
+            Mon-Sat: {SHOP_CONFIG.workingHours.weekdays} | Sun: {SHOP_CONFIG.workingHours.sunday}
           </p>
         </div>
       </div>

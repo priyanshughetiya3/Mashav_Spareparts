@@ -24,7 +24,12 @@ export function ToastProvider({ children }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const showToast = useCallback((message, type = 'info', duration) => {
+    return addToast(message, type, duration);
+  }, [addToast]);
+
   const toast = {
+    showToast,
     success: (msg) => addToast(msg, 'success'),
     error: (msg) => addToast(msg, 'error', 6000),
     warning: (msg) => addToast(msg, 'warning', 5000),

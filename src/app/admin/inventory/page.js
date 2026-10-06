@@ -37,6 +37,7 @@ export default function InventoryPage() {
   // Part Form State
   const [formData, setFormData] = useState({
     part_number: '',
+    barcode: '',
     name: '',
     category_id: '',
     supplier_id: '',
@@ -218,6 +219,7 @@ export default function InventoryPage() {
       setEditingPart(part);
       setFormData({
         part_number: part.part_number,
+        barcode: part.barcode || '',
         name: part.name,
         category_id: part.category_id || '',
         supplier_id: part.supplier_id || '',
@@ -233,6 +235,7 @@ export default function InventoryPage() {
       setEditingPart(null);
       setFormData({
         part_number: '',
+        barcode: '',
         name: '',
         category_id: categories[0]?.id || '',
         supplier_id: suppliers[0]?.id || '',
@@ -254,6 +257,7 @@ export default function InventoryPage() {
     try {
       const payload = {
         part_number: formData.part_number.trim(),
+        barcode: formData.barcode.trim() || null,
         name: formData.name.trim(),
         category_id: formData.category_id ? Number(formData.category_id) : null,
         supplier_id: formData.supplier_id ? Number(formData.supplier_id) : null,
@@ -676,17 +680,38 @@ export default function InventoryPage() {
               <div className={styles.modalBody}>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
-                    <label>Part Number (SKU / Barcode) *</label>
+                    <label>Part Number / SKU *</label>
                     <input
                       type="text"
                       required
                       className="input"
                       value={formData.part_number}
-                      onChange={(e) => setFormData({ ...formData, part_number: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, part_number: e.target.value })
+                      }
                       placeholder="e.g. HR-SP-001"
                     />
                   </div>
 
+                  <div className={styles.formGroup}>
+                    <label>Barcode</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={formData.barcode}
+                      onChange={(e) =>
+                        setFormData({ ...formData, barcode: e.target.value })
+                      }
+                      placeholder="Scan or enter barcode"
+                      inputMode="numeric"
+                    />
+                    <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                      Use the product&apos;s barcode or your own shop barcode.
+                    </small>
+                  </div>
+                </div>
+
+                <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Part Name *</label>
                     <input

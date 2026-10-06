@@ -27,10 +27,10 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     if (isAdmin) {
       fetchAlertCount();
-      // Real-time subscription for alerts
+      // Real-time subscription for stock notification requests
       const channel = supabase
-        .channel('alerts-count')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
+        .channel('notify-count')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_notifications' }, () => {
           fetchAlertCount();
         })
         .subscribe();
@@ -41,9 +41,9 @@ export default function AdminLayout({ children }) {
 
   async function fetchAlertCount() {
     const { count } = await supabase
-      .from('alerts')
+      .from('stock_notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('acknowledged', false);
+      .eq('notified', false);
     setAlertCount(count || 0);
   }
 

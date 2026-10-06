@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { SHOP_CONFIG } from '@/lib/constants';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, timeAgo } from '@/lib/utils';
 import { useToast } from '@/components/Toast';
 import styles from './alerts.module.css';
 
@@ -13,6 +13,14 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState({});
   const [reorderQuantities, setReorderQuantities] = useState({});
+
+  // Customer Notification Requests state
+  const [notifRequests, setNotifRequests] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(true);
+  const [markingId, setMarkingId] = useState(null);
+
+  // Active tab: 'stock' or 'notifications'
+  const [activeTab, setActiveTab] = useState('notifications');
 
   // Quick Restock Modal
   const [restockModalItem, setRestockModalItem] = useState(null);
@@ -50,9 +58,63 @@ export default function AlertsPage() {
     }
   }, [showToast]);
 
+  const fetchNotifRequests = useCallback(async () => {
+    setNotifLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('stock_notifications')
+        .select('*, parts(id, name, part_number, stock_quantity), profiles(full_name, phone)')
+        .eq('notified', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotifRequests(data || []);
+    } catch (err) {
+      console.error(err);
+      showToast('Error loading notification requests', 'error');
+    } finally {
+      setNotifLoading(false);
+    }
+  }, [showToast]);
+
+  async function handleMarkNotified(notifId) {
+    setMarkingId(notifId);
+    try {
+      const { error } = await supabase
+        .from('stock_notifications')
+        .update({ notified: true, notified_at: new Date().toISOString() })
+        .eq('id', notifId);
+
+      if (error) throw error;
+      showToast('Marked as notified', 'success');
+      fetchNotifRequests();
+    } catch (err) {
+      showToast(err.message || 'Failed to update', 'error');
+    } finally {
+      setMarkingId(null);
+    }
+  }
+
+  async function handleMarkAllNotifiedForPart(partId) {
+    try {
+      const { error } = await supabase
+        .from('stock_notifications')
+        .update({ notified: true, notified_at: new Date().toISOString() })
+        .eq('part_id', partId)
+        .eq('notified', false);
+
+      if (error) throw error;
+      showToast('All requests for this part marked as notified', 'success');
+      fetchNotifRequests();
+    } catch (err) {
+      showToast(err.message || 'Failed to update', 'error');
+    }
+  }
+
   useEffect(() => {
     fetchAlerts();
-  }, [fetchAlerts]);
+    fetchNotifRequests();
+  }, [fetchAlerts, fetchNotifRequests]);
 
   // Toggle Item Selection
   function toggleSelection(id) {
@@ -228,23 +290,45 @@ export default function AlertsPage() {
   const warningCount = alertParts.filter((p) => p.stock_quantity > 0).length;
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
 
+  // Group notifications by part for "Mark all" feature
+  const notifByPart = {};
+  notifRequests.forEach((n) => {
+    const pid = n.part_id;
+    if (!notifByPart[pid]) notifByPart[pid] = [];
+    notifByPart[pid].push(n);
+  });
+
   return (
     <div className={styles.page}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h1>Low Stock Warning & Reorder Hub</h1>
-          <p>Automated threshold alerts, shortage tracking & one-click Purchase Order generation</p>
+          <h1>Alerts & Notification Hub</h1>
+          <p>Customer notification requests, stock alerts & one-click Purchase Order generation</p>
         </div>
         <div className={styles.headerActions}>
-          <button className="btn btn-primary" onClick={generatePurchaseOrderPDF} disabled={selectedCount === 0}>
-            📄 Download Purchase Order PDF ({selectedCount})
-          </button>
+          {activeTab === 'stock' && (
+            <button className="btn btn-primary" onClick={generatePurchaseOrderPDF} disabled={selectedCount === 0}>
+              📄 Download Purchase Order PDF ({selectedCount})
+            </button>
+          )}
         </div>
       </div>
 
       {/* Summary Row */}
       <div className={styles.summaryRow}>
+        <div className={`${styles.summaryCard} ${notifRequests.length > 0 ? styles.summaryCardHighlight : ''}`}>
+          <div className={styles.summaryIcon} style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>
+            🔔
+          </div>
+          <div>
+            <div className={styles.summaryValue} style={{ color: notifRequests.length > 0 ? '#8b5cf6' : 'inherit' }}>
+              {notifRequests.length}
+            </div>
+            <div className={styles.summaryLabel}>Customer Notify Requests</div>
+          </div>
+        </div>
+
         <div className={styles.summaryCard}>
           <div className={styles.summaryIcon} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
             🛑
@@ -253,7 +337,7 @@ export default function AlertsPage() {
             <div className={styles.summaryValue} style={{ color: '#ef4444' }}>
               {criticalCount}
             </div>
-            <div className={styles.summaryLabel}>Critical: Zero Stock Remaining</div>
+            <div className={styles.summaryLabel}>Critical: Zero Stock</div>
           </div>
         </div>
 
@@ -265,7 +349,7 @@ export default function AlertsPage() {
             <div className={styles.summaryValue} style={{ color: '#f59e0b' }}>
               {warningCount}
             </div>
-            <div className={styles.summaryLabel}>Warning: Below Reorder Threshold</div>
+            <div className={styles.summaryLabel}>Warning: Below Threshold</div>
           </div>
         </div>
 
@@ -277,132 +361,270 @@ export default function AlertsPage() {
             <div className={styles.summaryValue}>
               {selectedCount} / {alertParts.length}
             </div>
-            <div className={styles.summaryLabel}>Items Selected For Reorder</div>
+            <div className={styles.summaryLabel}>Selected For Reorder</div>
           </div>
         </div>
       </div>
 
-      {/* Table Card */}
-      <div className={styles.tableCard}>
-        <div className={styles.tableToolbar}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <button className="btn btn-ghost btn-sm" onClick={() => toggleSelectAll(true)}>
-              Select All
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={() => toggleSelectAll(false)}>
-              Deselect All
-            </button>
+      {/* Tabs */}
+      <div className={styles.tabBar}>
+        <button
+          className={`${styles.tab} ${activeTab === 'notifications' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('notifications')}
+        >
+          🔔 Customer Notifications
+          {notifRequests.length > 0 && (
+            <span className={styles.tabBadge}>{notifRequests.length}</span>
+          )}
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'stock' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('stock')}
+        >
+          📦 Low Stock Reorder
+          {alertParts.length > 0 && (
+            <span className={styles.tabBadgeWarning}>{alertParts.length}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Customer Notification Requests Tab */}
+      {activeTab === 'notifications' && (
+        <div className={styles.tableCard}>
+          <div className={styles.tableToolbar}>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+              Pending "Notify Me" Requests from Customers
+            </span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+              Mark as notified after contacting the customer
+            </span>
           </div>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-            Adjust reorder quantity for each item before generating the PO document
-          </span>
-        </div>
 
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th style={{ width: '40px' }}>Select</th>
-                <th>Part Details</th>
-                <th>Category</th>
-                <th>Stock / Threshold</th>
-                <th>Severity</th>
-                <th>Supplier Contact</th>
-                <th>Reorder Qty</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
-                    <div className="spinner"></div>
-                  </td>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Part Requested</th>
+                  <th>Current Stock</th>
+                  <th>Requested</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
-              ) : alertParts.length === 0 ? (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
-                    🎉 No low stock items right now! Inventory health is optimal.
-                  </td>
-                </tr>
-              ) : (
-                alertParts.map((part) => {
-                  const isCritical = part.stock_quantity === 0;
-                  const isSelected = selectedItems[part.id];
+              </thead>
+              <tbody>
+                {notifLoading ? (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                      <div className="spinner"></div>
+                    </td>
+                  </tr>
+                ) : notifRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
+                      ✅ No pending notification requests. All customers have been notified!
+                    </td>
+                  </tr>
+                ) : (
+                  notifRequests.map((notif) => {
+                    const isMarking = markingId === notif.id;
+                    const partBackInStock = notif.parts?.stock_quantity > 0;
+                    const samePartCount = notifByPart[notif.part_id]?.length || 0;
 
-                  return (
-                    <tr key={part.id} className={isSelected ? styles.selectedRow : ''}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={!!isSelected}
-                          onChange={() => toggleSelection(part.id)}
-                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{part.name}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                          {part.part_number}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="badge badge-neutral">{part.categories?.name || 'Spares'}</span>
-                      </td>
-                      <td>
-                        <strong style={{ color: isCritical ? '#ef4444' : '#f59e0b' }}>
-                          {part.stock_quantity}
-                        </strong>{' '}
-                        / {part.low_stock_threshold}
-                      </td>
-                      <td>
-                        {isCritical ? (
-                          <span className="badge badge-danger">Critical: Out</span>
-                        ) : (
-                          <span className="badge badge-warning">Warning: Low</span>
-                        )}
-                      </td>
-                      <td>
-                        <div>{part.suppliers?.name || 'No Supplier'}</div>
-                        {part.suppliers?.phone && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            📞 {part.suppliers.phone}
+                    return (
+                      <tr key={notif.id} className={partBackInStock ? styles.backInStockRow : ''}>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {notif.profiles?.full_name || 'Unknown User'}
                           </div>
-                        )}
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="1"
-                          className={styles.reorderInput}
-                          value={reorderQuantities[part.id] || 1}
-                          onChange={(e) =>
-                            setReorderQuantities({
-                              ...reorderQuantities,
-                              [part.id]: Number(e.target.value) || 1,
-                            })
-                          }
-                        />
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => {
-                            setRestockModalItem(part);
-                            setRestockQty(reorderQuantities[part.id] || 10);
-                          }}
-                        >
-                          + Restock
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        </td>
+                        <td>
+                          {notif.profiles?.phone ? (
+                            <a
+                              href={`https://wa.me/${notif.profiles.phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.phoneLink}
+                            >
+                              📱 {notif.profiles.phone}
+                            </a>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)' }}>No phone</span>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {notif.parts?.name || 'Unknown Part'}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                            {notif.parts?.part_number}
+                          </div>
+                        </td>
+                        <td>
+                          {partBackInStock ? (
+                            <span className="badge badge-success">✓ Back in Stock ({notif.parts.stock_quantity})</span>
+                          ) : (
+                            <span className="badge badge-danger">Out of Stock</span>
+                          )}
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                            {timeAgo(notif.created_at)}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleMarkNotified(notif.id)}
+                              disabled={isMarking}
+                            >
+                              {isMarking ? '...' : '✓ Mark Notified'}
+                            </button>
+                            {samePartCount > 1 && (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleMarkAllNotifiedForPart(notif.part_id)}
+                                title={`Mark all ${samePartCount} requests for this part`}
+                              >
+                                All ({samePartCount})
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Low Stock Reorder Tab */}
+      {activeTab === 'stock' && (
+        <div className={styles.tableCard}>
+          <div className={styles.tableToolbar}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => toggleSelectAll(true)}>
+                Select All
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => toggleSelectAll(false)}>
+                Deselect All
+              </button>
+            </div>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+              Adjust reorder quantity for each item before generating the PO document
+            </span>
+          </div>
+
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ width: '40px' }}>Select</th>
+                  <th>Part Details</th>
+                  <th>Category</th>
+                  <th>Stock / Threshold</th>
+                  <th>Severity</th>
+                  <th>Supplier Contact</th>
+                  <th>Reorder Qty</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                      <div className="spinner"></div>
+                    </td>
+                  </tr>
+                ) : alertParts.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
+                      🎉 No low stock items right now! Inventory health is optimal.
+                    </td>
+                  </tr>
+                ) : (
+                  alertParts.map((part) => {
+                    const isCritical = part.stock_quantity === 0;
+                    const isSelected = selectedItems[part.id];
+
+                    return (
+                      <tr key={part.id} className={isSelected ? styles.selectedRow : ''}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={!!isSelected}
+                            onChange={() => toggleSelection(part.id)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                          />
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{part.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                            {part.part_number}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge badge-neutral">{part.categories?.name || 'Spares'}</span>
+                        </td>
+                        <td>
+                          <strong style={{ color: isCritical ? '#ef4444' : '#f59e0b' }}>
+                            {part.stock_quantity}
+                          </strong>{' '}
+                          / {part.low_stock_threshold}
+                        </td>
+                        <td>
+                          {isCritical ? (
+                            <span className="badge badge-danger">Critical: Out</span>
+                          ) : (
+                            <span className="badge badge-warning">Warning: Low</span>
+                          )}
+                        </td>
+                        <td>
+                          <div>{part.suppliers?.name || 'No Supplier'}</div>
+                          {part.suppliers?.phone && (
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              📞 {part.suppliers.phone}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            min="1"
+                            className={styles.reorderInput}
+                            value={reorderQuantities[part.id] || 1}
+                            onChange={(e) =>
+                              setReorderQuantities({
+                                ...reorderQuantities,
+                                [part.id]: Number(e.target.value) || 1,
+                              })
+                            }
+                          />
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => {
+                              setRestockModalItem(part);
+                              setRestockQty(reorderQuantities[part.id] || 10);
+                            }}
+                          >
+                            + Restock
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Quick Restock Modal */}
       {restockModalItem && (

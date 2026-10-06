@@ -3,9 +3,12 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-sticky);
+  z-index: 1000;
   transition: all var(--transition-base);
   padding: var(--space-3) 0;
+  background: rgba(6, 10, 23, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header.scrolled {
