@@ -75,6 +75,7 @@ export const NAV_LINKS = [
 
 export const ADMIN_NAV_LINKS = [
   { label: 'Dashboard', href: '/admin', icon: 'layout-dashboard' },
+  { label: 'POS / Billing', href: '/admin/pos', icon: 'scan-barcode' },
   { label: 'Inventory', href: '/admin/inventory', icon: 'package' },
   { label: 'Suppliers', href: '/admin/suppliers', icon: 'truck' },
   { label: 'Sales', href: '/admin/sales', icon: 'indian-rupee' },
