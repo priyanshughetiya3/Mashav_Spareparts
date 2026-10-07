@@ -80,11 +80,43 @@ export default function POSPage() {
     setBarcode('');
 
     try {
-      const { data: part, error } = await supabase
+      let part = null;
+      let error = null;
+
+      // 1. Try barcode
+      const barcodeResult = await supabase
         .from('parts')
         .select('*')
         .eq('barcode', cleanCode)
         .maybeSingle();
+
+      if (barcodeResult.data) {
+        part = barcodeResult.data;
+      } else {
+        // 2. Try exact part number
+        const partNumberResult = await supabase
+          .from('parts')
+          .select('*')
+          .eq('part_number', cleanCode)
+          .maybeSingle();
+
+        if (partNumberResult.data) {
+          part = partNumberResult.data;
+        } else {
+          // 3. Try product name
+          const nameResult = await supabase
+            .from('parts')
+            .select('*')
+            .ilike('name', `%${cleanCode}%`)
+            .limit(1);
+
+          if (nameResult.data?.length > 0) {
+            part = nameResult.data[0];
+          } else {
+            error = nameResult.error;
+          }
+        }
+      }
 
       if (error) throw error;
 
@@ -323,7 +355,7 @@ export default function POSPage() {
             fontWeight: 600,
           }}
         >
-          🔍 Scan Barcode
+          🔍 Search / Scan Product
         </label>
 
         <input
@@ -332,7 +364,7 @@ export default function POSPage() {
           value={barcode}
           onChange={(e) => setBarcode(e.target.value)}
           onKeyDown={handleBarcodeKeyDown}
-          placeholder="Scan barcode with USB/Bluetooth scanner..."
+          placeholder="Scan barcode or search part name / part number..."
           autoComplete="off"
           style={{
             width: '100%',
@@ -931,6 +963,32 @@ export default function POSPage() {
 
       {/* MOBILE */}
       <style jsx>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+
+          #print-receipt,
+          #print-receipt * {
+            visibility: visible !important;
+          }
+
+          #print-receipt {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 80mm !important;
+            max-width: 80mm !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 10mm !important;
+          }
+
+          .receipt-actions {
+            display: none !important;
+          }
+        }
+
         @media (max-width: 900px) {
           div[style*='grid-template-columns: minmax(0, 1fr) 360px'] {
             grid-template-columns: 1fr !important;

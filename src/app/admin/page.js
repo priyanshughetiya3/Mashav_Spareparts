@@ -379,9 +379,11 @@ export default function AdminDashboard() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th>Bill</th>
                   <th>Part</th>
                   <th>Qty</th>
                   <th>Total</th>
+                  <th>Payment</th>
                   <th>Profit</th>
                   <th>Time</th>
                 </tr>
@@ -389,7 +391,7 @@ export default function AdminDashboard() {
               <tbody>
                 {recentSales.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className={styles.emptyText}>
+                    <td colSpan="7" className={styles.emptyText}>
                       No recent sales recorded yet.
                     </td>
                   </tr>
@@ -397,17 +399,40 @@ export default function AdminDashboard() {
                   recentSales.map((sale) => (
                     <tr key={sale.id}>
                       <td>
-                        <div style={{ fontWeight: 600 }}>{sale.parts?.name || 'Part'}</div>
+                        <code style={{ fontSize: '11px' }}>
+                          {sale.bill_number || '—'}
+                        </code>
+                      </td>
+
+                      <td>
+                        <div style={{ fontWeight: 600 }}>
+                          {sale.parts?.name || 'Part'}
+                        </div>
+
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                           {sale.parts?.part_number}
                         </div>
                       </td>
+
                       <td>{sale.quantity}</td>
-                      <td>{formatCurrency(sale.selling_price * sale.quantity)}</td>
+
+                      <td>
+                        {formatCurrency(sale.selling_price * sale.quantity)}
+                      </td>
+
+                      <td>
+                        <span className="badge badge-success">
+                          {sale.payment_method || 'Cash'}
+                        </span>
+                      </td>
+
                       <td className={styles.profitPositive}>
                         +{formatCurrency(sale.profit)}
                       </td>
-                      <td style={{ fontSize: '12px' }}>{formatDateTime(sale.sold_at)}</td>
+
+                      <td style={{ fontSize: '12px' }}>
+                        {formatDateTime(sale.sold_at)}
+                      </td>
                     </tr>
                   ))
                 )}

@@ -35,6 +35,92 @@ export default function SalesPage() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('all'); // all, today, week, month
+  const [selectedBill, setSelectedBill] = useState(null);
+
+  async function handleViewBill(sale) {
+    if (!sale.bill_number) {
+      setSelectedBill({
+        billNumber: `SALE-${sale.id}`,
+        date: new Date(sale.sold_at),
+        customerName: sale.customer_name || 'Walk-in Customer',
+        customerPhone: sale.customer_phone || '',
+        paymentMethod: sale.payment_method || 'Cash',
+        items: [
+          {
+            name: sale.parts?.name || 'Part',
+            part_number: sale.parts?.part_number || '',
+            quantity: Number(sale.quantity),
+            selling_price: Number(sale.selling_price),
+            total:
+              Number(sale.selling_price) *
+              Number(sale.quantity),
+          },
+        ],
+        total:
+          Number(sale.selling_price) *
+          Number(sale.quantity),
+      });
+
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*, parts(name, part_number)')
+        .eq('bill_number', sale.bill_number)
+        .order('id', { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        showToast('Bill details not found', 'error');
+        return;
+      }
+
+      const firstSale = data[0];
+
+      setSelectedBill({
+        billNumber: sale.bill_number,
+        date: new Date(firstSale.sold_at),
+        customerName:
+          firstSale.customer_name || 'Walk-in Customer',
+        customerPhone:
+          firstSale.customer_phone || '',
+        paymentMethod:
+          firstSale.payment_method || 'Cash',
+
+        items: data.map((item) => ({
+          name: item.parts?.name || 'Part',
+          part_number:
+            item.parts?.part_number || '',
+          quantity: Number(item.quantity),
+          selling_price:
+            Number(item.selling_price),
+          total:
+            Number(item.selling_price) *
+            Number(item.quantity),
+        })),
+
+        total: data.reduce(
+          (sum, item) =>
+            sum +
+            Number(item.selling_price) *
+              Number(item.quantity),
+          0
+        ),
+      });
+    } catch (err) {
+      console.error(err);
+
+      showToast(
+        err.message || 'Failed to load bill',
+        'error'
+      );
+    }
+  }
 
   const fetchSales = useCallback(async () => {
     setLoading(true);
@@ -284,59 +370,127 @@ export default function SalesPage() {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th>Bill No.</th>
                 <th>Date & Time</th>
                 <th>Part Details</th>
                 <th>Quantity</th>
                 <th>Selling Price</th>
-                <th>Cost Price</th>
                 <th>Total Revenue</th>
                 <th>Profit</th>
+                <th>Payment</th>
                 <th>Customer</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
                     <div className="spinner"></div>
                   </td>
                 </tr>
               ) : filteredSales.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
                     No sales recorded for this period.
                   </td>
                 </tr>
               ) : (
                 filteredSales.map((s) => (
                   <tr key={s.id}>
-                    <td style={{ fontSize: 'var(--text-xs)' }}>{formatDateTime(s.sold_at)}</td>
                     <td>
-                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <code
+                        style={{
+                          fontSize: '11px',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        {s.bill_number || '—'}
+                      </code>
+                    </td>
+
+                    <td style={{ fontSize: 'var(--text-xs)' }}>
+                      {formatDateTime(s.sold_at)}
+                    </td>
+
+                    <td>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                        }}
+                      >
                         {s.parts?.name || 'Part'}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: 'var(--text-muted)',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
                         {s.parts?.part_number}
                       </div>
                     </td>
-                    <td><strong>{s.quantity}</strong></td>
-                    <td>{formatCurrency(s.selling_price)}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>{formatCurrency(s.cost_price_snapshot)}</td>
-                    <td style={{ fontWeight: 600 }}>{formatCurrency(s.selling_price * s.quantity)}</td>
-                    <td className={styles.profitBadge}>+{formatCurrency(s.profit)}</td>
+
+                    <td>
+                      <strong>{s.quantity}</strong>
+                    </td>
+
+                    <td>
+                      {formatCurrency(s.selling_price)}
+                    </td>
+
+                    <td style={{ fontWeight: 600 }}>
+                      {formatCurrency(s.selling_price * s.quantity)}
+                    </td>
+
+                    <td className={styles.profitBadge}>
+                      +{formatCurrency(s.profit)}
+                    </td>
+
+                    <td>
+                      <span className="badge badge-success">
+                        {s.payment_method || 'Cash'}
+                      </span>
+                    </td>
+
                     <td>
                       {s.customer_name ? (
                         <div>
                           <div>{s.customer_name}</div>
+
                           {s.customer_phone && (
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--text-muted)',
+                              }}
+                            >
                               {s.customer_phone}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Walk-in</span>
+                        <span
+                          style={{
+                            color: 'var(--text-muted)',
+                            fontSize: 'var(--text-xs)',
+                          }}
+                        >
+                          Walk-in
+                        </span>
                       )}
+                    </td>
+
+                    <td>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleViewBill(s)}
+                      >
+                        🧾 View
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -345,6 +499,148 @@ export default function SalesPage() {
           </table>
         </div>
       </div>
+
+      {selectedBill && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            id="sales-receipt"
+            style={{
+              background: '#fff',
+              color: '#111',
+              width: '100%',
+              maxWidth: '420px',
+              borderRadius: '12px',
+              padding: '28px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ margin: 0 }}>
+                MASHAV SPARE PARTS
+              </h2>
+
+              <p style={{ margin: '5px 0 15px' }}>
+                Bike Spare Parts
+              </p>
+
+              <hr />
+            </div>
+
+            <div style={{ fontSize: '13px', margin: '15px 0' }}>
+              <div>
+                <strong>Bill:</strong> {selectedBill.billNumber}
+              </div>
+
+              <div>
+                <strong>Date:</strong>{' '}
+                {selectedBill.date.toLocaleString('en-IN')}
+              </div>
+
+              <div>
+                <strong>Customer:</strong>{' '}
+                {selectedBill.customerName}
+              </div>
+
+              {selectedBill.customerPhone && (
+                <div>
+                  <strong>Phone:</strong>{' '}
+                  {selectedBill.customerPhone}
+                </div>
+              )}
+
+              <div>
+                <strong>Payment:</strong>{' '}
+                {selectedBill.paymentMethod}
+              </div>
+            </div>
+
+            <hr />
+
+            {selectedBill.items.map((item, index) => (
+              <div
+                key={`${item.part_number}-${index}`}
+                style={{
+                  padding: '10px 0',
+                  borderBottom: '1px dashed #ccc',
+                }}
+              >
+                <div style={{ fontWeight: 600 }}>
+                  {item.name}
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '13px',
+                    marginTop: '4px',
+                  }}
+                >
+                  <span>
+                    {item.quantity} ×{' '}
+                    {formatCurrency(item.selling_price)}
+                  </span>
+
+                  <strong>
+                    {formatCurrency(item.total)}
+                  </strong>
+                </div>
+              </div>
+            ))}
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '20px',
+                fontWeight: 700,
+                marginTop: '18px',
+              }}
+            >
+              <span>TOTAL</span>
+
+              <span>
+                {formatCurrency(selectedBill.total)}
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: '10px',
+                marginTop: '22px',
+              }}
+            >
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={() => window.print()}
+              >
+                🖨️ Reprint
+              </button>
+
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => setSelectedBill(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
