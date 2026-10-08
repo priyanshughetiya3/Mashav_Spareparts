@@ -26,7 +26,7 @@
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 217, 255, 0.15), transparent 70%);
+  background: radial-gradient(circle, rgba(0, 217, 255, 0.22), transparent 70%);
   filter: blur(60px);
   animation: float 8s ease-in-out infinite;
 }
@@ -38,7 +38,7 @@
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 45, 170, 0.1), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 45, 141, 0.14), transparent 70%);
   filter: blur(60px);
   animation: float 10s ease-in-out infinite reverse;
 }
@@ -50,7 +50,7 @@
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 217, 255, 0.08), transparent 70%);
+  background: radial-gradient(circle, rgba(0, 217, 255, 0.12), transparent 70%);
   filter: blur(40px);
   animation: float 6s ease-in-out infinite;
 }
@@ -268,7 +268,7 @@
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
-  background: rgba(0, 217, 255, 0.08);
+  background: rgba(0, 217, 255, 0.12);
   border: 1px solid rgba(0, 217, 255, 0.2);
   border-radius: var(--radius-lg);
   filter: drop-shadow(0 0 14px rgba(0, 217, 255, 0.3));
@@ -325,7 +325,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 217, 255, 0.08);
+  background: rgba(0, 217, 255, 0.12);
   border: 2px solid rgba(0, 217, 255, 0.25);
   border-radius: 50%;
   font-size: var(--text-xs);
@@ -451,7 +451,7 @@
 }
 
 .finderBadge:hover {
-  background: rgba(0, 217, 255, 0.08);
+  background: rgba(0, 217, 255, 0.12);
   border-color: rgba(0, 217, 255, 0.2);
   color: var(--text-primary);
   transform: translateY(-1px);
@@ -515,7 +515,7 @@
 }
 
 .categoryLabel:hover {
-  background: rgba(0, 217, 255, 0.15);
+  background: rgba(0, 217, 255, 0.22);
   border-color: var(--color-primary);
   transform: scale(1.06);
   box-shadow: 0 0 16px rgba(0, 217, 255, 0.25);
@@ -527,7 +527,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 217, 255, 0.15);
+  background: rgba(0, 217, 255, 0.22);
   border-radius: 50%;
   font-size: 0.7rem;
 }
@@ -763,7 +763,7 @@
 /* ---- Individual brand card ---- */
 .brandCard {
   --brand-color: #00D9FF;
-  --brand-glow: rgba(0, 217, 255, 0.12);
+  --brand-glow: rgba(0, 217, 255, 0.20);
 
   position: relative;
   display: flex;
@@ -1058,4 +1058,62 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
+}
+
+
+/* ===== MADHAV SPARES CYAN × PINK IDENTITY ===== */
+.hero {
+  background:
+    radial-gradient(circle at 18% 35%, rgba(0,217,255,0.10), transparent 34%),
+    radial-gradient(circle at 82% 65%, rgba(255,45,141,0.10), transparent 32%);
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 10% 5%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00F5FF 35%, #FF2DAA 65%, transparent);
+  box-shadow: 0 0 18px rgba(0,217,255,0.45), 0 0 24px rgba(255,45,170,0.25);
+}
+.heroTitle {
+  text-shadow: 0 0 32px rgba(0,217,255,0.08);
+}
+.finderSectionAccent,
+.brandsAccent {
+  background: linear-gradient(180deg, #00F5FF, #FF2DAA) !important;
+  box-shadow: 0 0 18px rgba(0,217,255,0.45), 0 0 24px rgba(255,45,170,0.25);
+}
+.finderCta {
+  background: linear-gradient(135deg, #00D9FF 0%, #00F5FF 45%, #FF2D8D 100%) !important;
+  color: #05080A !important;
+  box-shadow: 0 10px 35px rgba(0,217,255,0.25), 0 0 28px rgba(255,45,141,0.18);
+}
+.finderCta:hover {
+  box-shadow: 0 14px 42px rgba(0,217,255,0.34), 0 0 38px rgba(255,45,141,0.25);
+}
+.bikeFinderPanel {
+  border-color: rgba(0,217,255,0.22) !important;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.45), 0 0 45px rgba(0,217,255,0.06);
+}
+.categoryLabel {
+  border-color: rgba(0,217,255,0.35) !important;
+  box-shadow: 0 0 18px rgba(0,217,255,0.10);
+}
+.categoryLabel:hover {
+  border-color: #FF2DAA !important;
+  box-shadow: 0 0 22px rgba(255,45,170,0.28);
+}
+.statNumber {
+  background: linear-gradient(90deg, #00F5FF, #FF2DAA);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+.cta {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 25% 50%, rgba(0,217,255,0.08), transparent 30%),
+    radial-gradient(circle at 75% 50%, rgba(255,45,141,0.08), transparent 30%);
 }
