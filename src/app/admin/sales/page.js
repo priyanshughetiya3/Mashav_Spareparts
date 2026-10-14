@@ -176,15 +176,44 @@ export default function SalesPage() {
       totalItems += qty;
     });
 
-    const avgMargin = totalRev > 0 ? ((totalProf / (totalRev - totalProf)) * 100).toFixed(1) : '0';
+    const uniqueBills = new Set(
+      filteredSales.map((s) =>
+        s.bill_number || `legacy-sale-${s.id}`
+      )
+    );
+
+    const orderCount = uniqueBills.size;
+
+    const avgMargin = totalRev > 0
+      ? ((totalProf / totalRev) * 100).toFixed(1)
+      : '0';
 
     return {
       revenue: totalRev,
       profit: totalProf,
       items: totalItems,
-      orders: filteredSales.length,
+      orders: orderCount,
       margin: avgMargin,
     };
+  }, [filteredSales]);
+
+  const paymentSummary = useMemo(() => {
+    const totals = {
+      Cash: 0,
+      UPI: 0,
+    };
+
+    filteredSales.forEach((sale) => {
+      const method = sale.payment_method || 'Cash';
+
+      if (Object.prototype.hasOwnProperty.call(totals, method)) {
+        totals[method] +=
+          (Number(sale.selling_price) || 0) *
+          (Number(sale.quantity) || 0);
+      }
+    });
+
+    return totals;
   }, [filteredSales]);
 
   // Chart Data (Group sales profit by day)
@@ -294,8 +323,80 @@ export default function SalesPage() {
           </button>
         </div>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-          Showing {filteredSales.length} transaction records
+          Showing {
+            new Set(
+              filteredSales.map((s) =>
+                s.bill_number || `legacy-sale-${s.id}`
+              )
+            ).size
+          } bills ({filteredSales.length} product records)
         </span>
+      </div>
+
+      {/* Daily and Monthly Summary */}
+      <div className={styles.metricsGrid}>
+        {[
+          {
+            title: "Today's Revenue",
+            value: sales
+              .filter((s) => {
+                const date = new Date(s.sold_at);
+                const today = new Date();
+                return date.toDateString() === today.toDateString();
+              })
+              .reduce(
+                (sum, s) =>
+                  sum + Number(s.selling_price) * Number(s.quantity),
+                0
+              ),
+          },
+          {
+            title: "This Month's Revenue",
+            value: sales
+              .filter((s) => {
+                const date = new Date(s.sold_at);
+                const today = new Date();
+                return (
+                  date.getMonth() === today.getMonth() &&
+                  date.getFullYear() === today.getFullYear()
+                );
+              })
+              .reduce(
+                (sum, s) =>
+                  sum + Number(s.selling_price) * Number(s.quantity),
+                0
+              ),
+          },
+          {
+            title: "Today's Profit",
+            value: sales
+              .filter((s) => {
+                const date = new Date(s.sold_at);
+                return date.toDateString() === new Date().toDateString();
+              })
+              .reduce((sum, s) => sum + (Number(s.profit) || 0), 0),
+          },
+          {
+            title: "This Month's Profit",
+            value: sales
+              .filter((s) => {
+                const date = new Date(s.sold_at);
+                const today = new Date();
+                return (
+                  date.getMonth() === today.getMonth() &&
+                  date.getFullYear() === today.getFullYear()
+                );
+              })
+              .reduce((sum, s) => sum + (Number(s.profit) || 0), 0),
+          },
+        ].map((item) => (
+          <div className={styles.metricCard} key={item.title}>
+            <div className={styles.metricLabel}>{item.title}</div>
+            <div className={styles.metricValue}>
+              {formatCurrency(item.value)}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Summary Metrics */}
@@ -329,6 +430,36 @@ export default function SalesPage() {
           </div>
           <div className={styles.metricSub}>Per billing counter receipt</div>
         </div>
+      </div>
+
+      {/* Payment Method Breakdown */}
+      <div className={styles.metricsGrid}>
+        {[
+          {
+            name: 'Cash',
+            amount: paymentSummary.Cash,
+            icon: '💵',
+          },
+          {
+            name: 'UPI',
+            amount: paymentSummary.UPI,
+            icon: '📱',
+          },
+        ].map((payment) => (
+          <div className={styles.metricCard} key={payment.name}>
+            <div className={styles.metricLabel}>
+              {payment.icon} {payment.name} Payments
+            </div>
+
+            <div className={styles.metricValue}>
+              {formatCurrency(payment.amount)}
+            </div>
+
+            <div className={styles.metricSub}>
+              Revenue received through {payment.name}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Profit Trend Chart */}

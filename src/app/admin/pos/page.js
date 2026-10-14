@@ -16,6 +16,7 @@ export default function POSPage() {
   const [loading, setLoading] = useState(false);
   const [lastBill, setLastBill] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [productSuggestions, setProductSuggestions] = useState([]);
 
   const inputRef = useRef(null);
   const scannerRef = useRef(null);
@@ -71,6 +72,32 @@ export default function POSPage() {
       }
     };
   }, [showScanner]);
+
+  async function searchProducts(value) {
+    const searchTerm = value.trim();
+
+    if (!searchTerm) {
+      setProductSuggestions([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*')
+      .or(
+        `name.ilike.%${searchTerm}%,part_number.ilike.%${searchTerm}%,barcode.ilike.%${searchTerm}%`
+      )
+      .order('name')
+      .limit(8);
+
+    if (error) {
+      console.error(error);
+      setProductSuggestions([]);
+      return;
+    }
+
+    setProductSuggestions(data || []);
+  }
 
   async function handleBarcodeScan(code) {
     const cleanCode = String(code || '').trim();
@@ -358,25 +385,95 @@ export default function POSPage() {
           🔍 Search / Scan Product
         </label>
 
-        <input
-          ref={inputRef}
-          type="text"
-          value={barcode}
-          onChange={(e) => setBarcode(e.target.value)}
-          onKeyDown={handleBarcodeKeyDown}
-          placeholder="Scan barcode or search part name / part number..."
-          autoComplete="off"
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: '18px',
-            borderRadius: '10px',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-primary)',
-            color: 'var(--text-primary)',
-            outline: 'none',
-          }}
-        />
+        <div style={{ position: 'relative' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={barcode}
+            onChange={(e) => {
+              const value = e.target.value;
+              setBarcode(value);
+              searchProducts(value);
+            }}
+            onKeyDown={handleBarcodeKeyDown}
+            placeholder="Scan barcode or search part name / part number..."
+            autoComplete="off"
+            style={{
+              width: '100%',
+              padding: '16px',
+              fontSize: '18px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-primary)',
+              color: 'var(--text-primary)',
+              outline: 'none',
+            }}
+          />
+
+          {productSuggestions.length > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                background: '#101820',
+                border: '1px solid #00e5ff',
+                borderRadius: '10px',
+                marginTop: '6px',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                boxShadow: '0 8px 30px rgba(0,229,255,0.15)',
+              }}
+            >
+              {productSuggestions.map((part) => (
+                <button
+                  key={part.id}
+                  type="button"
+                  onClick={() => {
+                    setBarcode('');
+                    setProductSuggestions([]);
+                    handleBarcodeScan(part.barcode || part.part_number || part.name);
+                  }}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'transparent',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderBottom: '1px solid rgba(255,255,255,0.08)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600 }}>
+                      {part.name}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                      Part No: {part.part_number || '—'}
+                      {part.barcode ? ` • Barcode: ${part.barcode}` : ''}
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ color: '#00e5ff', fontWeight: 700 }}>
+                      ₹{Number(part.mrp || 0).toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                      Stock: {part.stock_quantity}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <p
           style={{
@@ -665,7 +762,6 @@ export default function POSPage() {
             >
               <option value="Cash">💵 Cash</option>
               <option value="UPI">📱 UPI</option>
-              <option value="Card">💳 Card</option>
             </select>
           </div>
 
