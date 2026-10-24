@@ -1,3 +1,7 @@
+/* ============================================================
+   Inventory Page — Glassmorphism
+   ============================================================ */
+
 .page {
   display: flex;
   flex-direction: column;
@@ -32,16 +36,31 @@
   flex-wrap: wrap;
 }
 
-/* Control Bar: Search, Category Filter, Stock Filter, Barcode */
+/* ============================================================
+   Glass Control Bar
+   ============================================================ */
 .controlBar {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-4);
   flex-wrap: wrap;
+  position: relative;
+}
+
+.controlBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
 
 .searchBox {
@@ -54,12 +73,28 @@
   min-width: 160px;
 }
 
-/* Table */
+/* ============================================================
+   Glass Data Table
+   ============================================================ */
 .tableCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(var(--glass-blur-light));
+  -webkit-backdrop-filter: blur(var(--glass-blur-light));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  position: relative;
+}
+
+.tableCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  z-index: 1;
 }
 
 .tableWrapper {
@@ -82,19 +117,19 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
   white-space: nowrap;
 }
 
 .table td {
   padding: var(--space-4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   vertical-align: middle;
 }
 
 .table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 229, 255, 0.02);
 }
 
 .partCell {
@@ -113,7 +148,9 @@
   font-family: var(--font-mono);
 }
 
-/* Stock Controls */
+/* ============================================================
+   Stock Controls
+   ============================================================ */
 .stockControl {
   display: flex;
   align-items: center;
@@ -124,8 +161,8 @@
   width: 28px;
   height: 28px;
   border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color-strong);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border-hover);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -137,8 +174,9 @@
 
 .stockBtn:hover {
   background: var(--color-primary);
-  color: white;
+  color: var(--bg-primary);
   border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow-sm);
 }
 
 .stockNum {
@@ -159,30 +197,37 @@
   gap: var(--space-2);
 }
 
-/* Modal Styling */
+/* ============================================================
+   Glass Modal
+   ============================================================ */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
   padding: var(--space-4);
+  animation: fadeIn 0.2s ease;
 }
 
 .modalContent {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color-strong);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border-hover);
   border-radius: var(--radius-xl);
   max-width: 650px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--glass-shadow-elevated);
   display: flex;
   flex-direction: column;
+  animation: fadeInUp 0.25s ease;
 }
 
 .modalHeader {
@@ -190,7 +235,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .modalHeader h2 {
@@ -203,10 +248,13 @@
   color: var(--text-muted);
   cursor: pointer;
   padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
 }
 
 .modalClose:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .modalBody {
@@ -242,8 +290,8 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  border-top: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .scannerContainer {
@@ -259,7 +307,9 @@
   }
 }
 
-/* Notification Badge */
+/* ============================================================
+   Notification Badge
+   ============================================================ */
 .notifBadge {
   display: inline-flex;
   align-items: center;
@@ -283,7 +333,9 @@
   transform: scale(1.05);
 }
 
-/* Customer List in Modal */
+/* ============================================================
+   Customer List in Modal
+   ============================================================ */
 .customerList {
   display: flex;
   flex-direction: column;
@@ -297,15 +349,15 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-3) var(--space-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
 .customerRow:hover {
-  border-color: var(--border-color-strong);
-  background: var(--bg-card-hover);
+  border-color: var(--glass-border-hover);
+  background: var(--glass-surface-strong);
 }
 
 .customerInfo {
@@ -331,4 +383,3 @@
   align-items: center;
   gap: var(--space-2);
 }
-

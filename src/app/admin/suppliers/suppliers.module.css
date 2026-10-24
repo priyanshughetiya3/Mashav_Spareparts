@@ -1,3 +1,7 @@
+/* ============================================================
+   Suppliers Page — Glassmorphism
+   ============================================================ */
+
 .page {
   display: flex;
   flex-direction: column;
@@ -25,6 +29,9 @@
   margin-top: 2px;
 }
 
+/* ============================================================
+   Glass Supplier Cards Grid
+   ============================================================ */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -32,19 +39,34 @@
 }
 
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
 
 .card:hover {
-  border-color: var(--border-color-strong);
+  border-color: var(--glass-border-hover);
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .cardHeader {
@@ -90,7 +112,7 @@
   align-items: center;
   justify-content: space-between;
   padding-top: var(--space-4);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--glass-border);
   margin-top: auto;
 }
 
@@ -99,28 +121,35 @@
   gap: var(--space-2);
 }
 
-/* Modal */
+/* ============================================================
+   Glass Modal
+   ============================================================ */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
   padding: var(--space-4);
+  animation: fadeIn 0.2s ease;
 }
 
 .modalContent {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color-strong);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border-hover);
   border-radius: var(--radius-xl);
   max-width: 550px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--glass-shadow-elevated);
+  animation: fadeInUp 0.25s ease;
 }
 
 .modalHeader {
@@ -128,7 +157,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .modalHeader h2 {
@@ -140,6 +169,11 @@
   font-size: var(--text-xl);
   color: var(--text-muted);
   cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.modalClose:hover {
+  color: var(--text-primary);
 }
 
 .modalBody {
@@ -174,6 +208,6 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  border-top: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.12);
 }

@@ -333,7 +333,6 @@ export default function POSPage() {
       style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '24px',
       }}
     >
       {/* HEADER */}
@@ -368,8 +367,10 @@ export default function POSPage() {
       {/* SCANNER INPUT */}
       <div
         style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-color)',
+          background: 'var(--glass-surface)',
+          backdropFilter: 'blur(var(--glass-blur))',
+          WebkitBackdropFilter: 'blur(var(--glass-blur))',
+          border: '1px solid var(--glass-border)',
           borderRadius: '14px',
           padding: '24px',
           marginBottom: '24px',
@@ -403,10 +404,11 @@ export default function POSPage() {
               padding: '16px',
               fontSize: '18px',
               borderRadius: '10px',
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-primary)',
+              border: '1px solid var(--border-color-strong)',
+              background: 'var(--bg-input)',
               color: 'var(--text-primary)',
               outline: 'none',
+              transition: 'border-color 0.15s ease',
             }}
           />
 
@@ -418,8 +420,10 @@ export default function POSPage() {
                 left: 0,
                 right: 0,
                 zIndex: 100,
-                background: '#101820',
-                border: '1px solid #00e5ff',
+                background: 'var(--glass-surface-strong)',
+                backdropFilter: 'blur(var(--glass-blur-strong))',
+                WebkitBackdropFilter: 'blur(var(--glass-blur-strong))',
+                border: '1px solid var(--glass-cyan-border)',
                 borderRadius: '10px',
                 marginTop: '6px',
                 maxHeight: '300px',
@@ -498,8 +502,10 @@ export default function POSPage() {
         {/* CART */}
         <div
           style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
+            background: 'var(--glass-surface-strong)',
+            backdropFilter: 'blur(var(--glass-blur-light))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur-light))',
+            border: '1px solid var(--glass-border)',
             borderRadius: '14px',
             overflow: 'hidden',
           }}
@@ -665,8 +671,10 @@ export default function POSPage() {
         {/* CHECKOUT */}
         <div
           style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
+            background: 'var(--glass-surface)',
+            backdropFilter: 'blur(var(--glass-blur))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur))',
+            border: '1px solid var(--glass-border)',
             borderRadius: '14px',
             padding: '24px',
             height: 'fit-content',
@@ -699,9 +707,10 @@ export default function POSPage() {
                 padding: '12px',
                 borderRadius: '8px',
                 border:
-                  '1px solid var(--border-color)',
-                background: 'var(--bg-primary)',
+                  '1px solid var(--border-color-strong)',
+                background: 'var(--bg-input)',
                 color: 'var(--text-primary)',
+                outline: 'none',
               }}
             />
           </div>
@@ -729,9 +738,10 @@ export default function POSPage() {
                 padding: '12px',
                 borderRadius: '8px',
                 border:
-                  '1px solid var(--border-color)',
-                background: 'var(--bg-primary)',
+                  '1px solid var(--border-color-strong)',
+                background: 'var(--bg-input)',
                 color: 'var(--text-primary)',
+                outline: 'none',
               }}
             />
           </div>
@@ -754,10 +764,11 @@ export default function POSPage() {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg-primary)',
+                border: '1px solid var(--border-color-strong)',
+                background: 'var(--bg-input)',
                 color: 'var(--text-primary)',
                 fontSize: '15px',
+                outline: 'none',
               }}
             >
               <option value="Cash">💵 Cash</option>
@@ -845,7 +856,9 @@ export default function POSPage() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.8)',
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
@@ -855,11 +868,15 @@ export default function POSPage() {
         >
           <div
             style={{
-              background: 'var(--bg-card)',
+              background: 'var(--glass-surface-strong)',
+              backdropFilter: 'blur(var(--glass-blur-strong))',
+              WebkitBackdropFilter: 'blur(var(--glass-blur-strong))',
+              border: '1px solid var(--glass-border-hover)',
               borderRadius: '16px',
               padding: '20px',
               width: '100%',
               maxWidth: '500px',
+              boxShadow: 'var(--glass-shadow-elevated)',
             }}
           >
             <div
@@ -903,7 +920,9 @@ export default function POSPage() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.75)',
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             zIndex: 10000,
             display: 'flex',
             alignItems: 'center',

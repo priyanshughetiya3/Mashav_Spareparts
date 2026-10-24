@@ -1,3 +1,7 @@
+/* ============================================================
+   Admin Dashboard — Glassmorphism
+   ============================================================ */
+
 .dashboard {
   display: flex;
   flex-direction: column;
@@ -31,7 +35,9 @@
   gap: var(--space-3);
 }
 
-/* Metrics Grid */
+/* ============================================================
+   Glass Metric Cards
+   ============================================================ */
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -39,19 +45,35 @@
 }
 
 .metricCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle inner highlight */
+.metricCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
 }
 
 .metricCard:hover {
-  border-color: var(--border-color-strong);
+  border-color: var(--glass-border-hover);
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .metricIcon {
@@ -90,7 +112,9 @@
   margin-top: 2px;
 }
 
-/* Charts Section */
+/* ============================================================
+   Glass Chart Cards
+   ============================================================ */
 .chartsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -98,12 +122,25 @@
 }
 
 .chartCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.chartCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
 
 .chartCardHeader {
@@ -125,7 +162,9 @@
   width: 100%;
 }
 
-/* Dual Column Tables */
+/* ============================================================
+   Glass Table Cards
+   ============================================================ */
 .tablesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
@@ -133,10 +172,23 @@
 }
 
 .tableCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(var(--glass-blur-light));
+  -webkit-backdrop-filter: blur(var(--glass-blur-light));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
+  position: relative;
+}
+
+.tableCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
 }
 
 .tableHeader {
@@ -170,7 +222,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .table td {
@@ -195,6 +247,9 @@
   font-weight: 600;
 }
 
+/* ============================================================
+   Responsive
+   ============================================================ */
 @media (max-width: 768px) {
   .chartsGrid,
   .tablesGrid {

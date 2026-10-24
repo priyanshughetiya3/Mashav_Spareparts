@@ -1,3 +1,7 @@
+/* ============================================================
+   Alerts Page — Glassmorphism
+   ============================================================ */
+
 .page {
   display: flex;
   flex-direction: column;
@@ -31,7 +35,9 @@
   gap: var(--space-3);
 }
 
-/* Alert Summary Banners */
+/* ============================================================
+   Glass Summary Cards
+   ============================================================ */
 .summaryRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -39,13 +45,32 @@
 }
 
 .summaryCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   display: flex;
   align-items: center;
   gap: var(--space-4);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.summaryCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+
+.summaryCard:hover {
+  border-color: var(--glass-border-hover);
 }
 
 .summaryIcon {
@@ -71,12 +96,28 @@
   font-weight: 600;
 }
 
-/* Table */
+/* ============================================================
+   Glass Data Table
+   ============================================================ */
 .tableCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(var(--glass-blur-light));
+  -webkit-backdrop-filter: blur(var(--glass-blur-light));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  position: relative;
+}
+
+.tableCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  z-index: 1;
 }
 
 .tableToolbar {
@@ -84,7 +125,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.01);
 }
 
@@ -105,24 +146,24 @@
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.02);
   white-space: nowrap;
 }
 
 .table td {
   padding: var(--space-4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   vertical-align: middle;
 }
 
 .table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 229, 255, 0.02);
 }
 
 .selectedRow td {
-  background: rgba(0, 217, 255, 0.06) !important;
+  background: rgba(0, 229, 255, 0.06) !important;
 }
 
 .reorderInput {
@@ -135,26 +176,33 @@
   text-align: center;
 }
 
-/* Quick Restock Modal */
+/* ============================================================
+   Glass Modal
+   ============================================================ */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
   padding: var(--space-4);
+  animation: fadeIn 0.2s ease;
 }
 
 .modalContent {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color-strong);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border-hover);
   border-radius: var(--radius-xl);
   max-width: 440px;
   width: 100%;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--glass-shadow-elevated);
+  animation: fadeInUp 0.25s ease;
 }
 
 .modalHeader {
@@ -162,13 +210,18 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .modalClose {
   cursor: pointer;
   color: var(--text-muted);
   font-size: var(--text-xl);
+  transition: color var(--transition-fast);
+}
+
+.modalClose:hover {
+  color: var(--text-primary);
 }
 
 .modalBody {
@@ -184,16 +237,20 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  border-top: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.12);
 }
 
-/* Tab Bar */
+/* ============================================================
+   Glass Tab Bar
+   ============================================================ */
 .tabBar {
   display: flex;
   gap: var(--space-1);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-1);
 }
@@ -222,8 +279,8 @@
 
 .tabActive {
   color: var(--text-primary) !important;
-  background: rgba(0, 217, 255, 0.1) !important;
-  box-shadow: 0 0 0 1px rgba(0, 217, 255, 0.2);
+  background: rgba(0, 229, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-border);
 }
 
 .tabBadge {
@@ -281,3 +338,8 @@
   box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .tabBadge {
+    animation: none;
+  }
+}
